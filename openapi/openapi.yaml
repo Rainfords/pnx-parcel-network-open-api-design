@@ -1,0 +1,377 @@
+openapi: 3.1.0
+
+info:
+  title: Statutory Action Parcels API
+  version: 1.0.0
+  description: |
+    API for managing Statutory Action Parcel data.
+    Supports bulk create, update, and delete operations in a single PATCH request.
+  license:
+    name: MIT
+    identifier: MIT
+
+servers:
+  - url: https://api.statutory-actions.local/v1
+    description: Production API
+
+paths:
+  /parcels:
+    get:
+      summary: Get all statutory action parcels
+      description: |
+        Retrieve a collection of all statutory action parcels.
+        Returns the complete set of parcel records with all read-only server-managed fields.
+      operationId: getParcels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Collection of parcels retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetParcelsResponse'
+              examples:
+                success:
+                  summary: Collection of parcels
+                  value:
+                    parcels:
+                      - parcelId: 3100000
+                        appellation: "Lot A, Block 1"
+                        action: "Create"
+                        parcelIntent: "Road"
+                        purpose: "Land Declared Road"
+                        purposeStatus: "Current"
+                        name: "Lot A"
+                        comments: null
+                        imageId: 4100000
+                      - parcelId: 3100001
+                        appellation: "Lot B, Block 2"
+                        action: "Extinguished"
+                        parcelIntent: "DCDB"
+                        purpose: "Land Declared Road"
+                        purposeStatus: "Historic"
+                        name: "Lot B"
+                        comments: "Legacy parcel"
+                        imageId: null
+
+        '401':
+          description: Unauthorized — invalid or missing bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Bulk update parcels (create, update, delete)
+      description: |
+        Atomically apply a batch of parcel operations (create, update, delete) in a single request.
+        This endpoint is designed to support table-based UX patterns where users:
+        - Add new rows (create operations)
+        - Edit existing cells (update operations)
+        - Remove rows (delete operations)
+
+        Then submit the entire form in one PATCH request.
+
+        The endpoint processes all rows in order and returns per-row results indicating success or failure.
+      operationId: patchParcels
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchParcelsRequest'
+            examples:
+              mixed_operations:
+                summary: Mixed create, update, delete
+                value:
+                  rows:
+                    - operation: create
+                      purpose: "Residential"
+                      purposeStatus: "Active"
+                      name: "Lot A"
+                      comments: "New residential lot"
+                      imageId: null
+                    - operation: update
+                      parcelId: 42
+                      purpose: "Commercial"
+                      purposeStatus: "Pending"
+                    - operation: delete
+                      parcelId: 99
+
+      responses:
+        '200':
+          description: All operations succeeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchParcelsResponse'
+              examples:
+                success:
+                  summary: All rows processed successfully
+                  value:
+                    results:
+                      - operation: create
+                        parcelId: 101
+                        status: success
+                      - operation: update
+                        parcelId: 42
+                        status: success
+                      - operation: delete
+                        parcelId: 99
+                        status: success
+
+        '207':
+          description: Partial success — some rows failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchParcelsResponse'
+              examples:
+                partial_success:
+                  summary: One row failed, others succeeded
+                  value:
+                    results:
+                      - operation: create
+                        parcelId: 101
+                        status: success
+                      - operation: update
+                        parcelId: 42
+                        status: error
+                        error: "Parcel not found"
+                      - operation: delete
+                        parcelId: 99
+                        status: success
+
+        '400':
+          description: Bad request — malformed payload or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '422':
+          description: Unprocessable entity — all rows rejected due to semantic errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer token authentication
+
+  schemas:
+    PatchParcelsRequest:
+      type: object
+      required:
+        - rows
+      properties:
+        rows:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/ParcelRow'
+          description: Array of parcel operations (create, update, or delete)
+
+    ParcelRow:
+      oneOf:
+        - $ref: '#/components/schemas/CreateParcelRow'
+        - $ref: '#/components/schemas/UpdateParcelRow'
+        - $ref: '#/components/schemas/DeleteParcelRow'
+      discriminator:
+        propertyName: operation
+        mapping:
+          create: '#/components/schemas/CreateParcelRow'
+          update: '#/components/schemas/UpdateParcelRow'
+          delete: '#/components/schemas/DeleteParcelRow'
+
+    CreateParcelRow:
+      type: object
+      required:
+        - operation
+        - purpose
+        - purposeStatus
+        - name
+      properties:
+        operation:
+          type: string
+          enum: [create]
+          description: Operation type identifier
+        purpose:
+          type: string
+          description: Purpose of the parcel (e.g., "Residential", "Commercial")
+        purposeStatus:
+          type: string
+          description: Status of the parcel purpose (e.g., "Active", "Pending", "Inactive")
+        name:
+          type: string
+          description: Name or identifier for the parcel
+        comments:
+          type: [string, "null"]
+          description: Optional comments about the parcel
+        imageId:
+          type: [integer, "null"]
+          description: Optional reference to an associated image
+      additionalProperties: false
+
+    UpdateParcelRow:
+      type: object
+      required:
+        - operation
+        - parcelId
+      properties:
+        operation:
+          type: string
+          enum: [update]
+          description: Operation type identifier
+        parcelId:
+          type: integer
+          description: Primary key of the parcel to update
+        purpose:
+          type: string
+          description: Purpose of the parcel (optional field for partial updates)
+        purposeStatus:
+          type: string
+          description: Status of the parcel purpose (optional field for partial updates)
+        name:
+          type: string
+          description: Name or identifier for the parcel (optional field for partial updates)
+        comments:
+          type: [string, "null"]
+          description: Optional comments about the parcel
+        imageId:
+          type: [integer, "null"]
+          description: Optional reference to an associated image
+      additionalProperties: false
+
+    DeleteParcelRow:
+      type: object
+      required:
+        - operation
+        - parcelId
+      properties:
+        operation:
+          type: string
+          enum: [delete]
+          description: Operation type identifier
+        parcelId:
+          type: integer
+          description: Primary key of the parcel to delete
+      additionalProperties: false
+
+    PatchParcelsResponse:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParcelRowResult'
+          description: Per-row results indicating success or failure
+
+    ParcelRowResult:
+      type: object
+      required:
+        - operation
+        - status
+      properties:
+        operation:
+          type: string
+          enum: [create, update, delete]
+          description: The operation type that was performed
+        parcelId:
+          type: integer
+          description: |
+            The parcel ID. For create operations, this is the server-assigned ID.
+            For update and delete operations, this echoes the requested parcelId.
+        status:
+          type: string
+          enum: [success, error]
+          description: Outcome of the operation
+        error:
+          type: string
+          description: |
+            Error message if status is "error".
+            Examples: "Parcel not found", "Validation failed", "Permission denied"
+      additionalProperties: false
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        details:
+          type: string
+          description: Additional error details or context
+        requestId:
+          type: string
+          description: Unique identifier for this request (useful for debugging)
+
+    Parcel:
+      type: object
+      required:
+        - parcelId
+      properties:
+        parcelId:
+          type: integer
+          description: Unique identifier for the parcel (e.g., 3100000)
+        appellation:
+          type: [string, "null"]
+          description: Legal description of the parcel (e.g., "Lot A, Block 1"). Server-managed read-only field.
+        action:
+          type: [string, "null"]
+          description: Statutory action associated with the parcel (e.g., "Create", "Extinguished"). Server-managed read-only field.
+        parcelIntent:
+          type: [string, "null"]
+          description: Intent of the parcel (e.g., "Road", "DCDB"). Server-managed read-only field.
+        purpose:
+          type: [string, "null"]
+          description: Purpose of the parcel (e.g., "Land Declared Road")
+        purposeStatus:
+          type: [string, "null"]
+          description: Status of the parcel's purpose (e.g., "Current", "Historic")
+        name:
+          type: [string, "null"]
+          description: Name or identifier for the parcel
+        comments:
+          type: [string, "null"]
+          description: Optional comments about the parcel
+        imageId:
+          type: [integer, "null"]
+          description: Optional reference to an associated image (e.g., 4100000)
+
+    GetParcelsResponse:
+      type: object
+      required:
+        - parcels
+      properties:
+        parcels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Parcel'
+          description: Array of statutory action parcel records

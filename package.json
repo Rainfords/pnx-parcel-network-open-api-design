@@ -1,0 +1,20 @@
+{
+  "name": "statutory-action-parcels-api",
+  "version": "1.0.0",
+  "description": "Statutory Action Parcels OpenAPI specification and React example client",
+  "private": true,
+  "scripts": {
+    "codegen": "openapi-typescript ./openapi/openapi.yaml -o ./example/src/api/openapi-types.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.4.0"
+  },
+  "keywords": [
+    "openapi",
+    "api",
+    "parcel",
+    "statutory-actions"
+  ],
+  "author": "",
+  "license": "MIT"
+}

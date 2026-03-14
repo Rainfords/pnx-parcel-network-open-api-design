@@ -1,0 +1,5 @@
+extends:
+  - recommended
+
+# Note: openapi-typescript is run separately via npm script
+# This config is used for redocly lint, bundle, and build-docs commands

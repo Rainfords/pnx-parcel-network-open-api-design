@@ -1,0 +1,25 @@
+{
+  "name": "statutory-action-parcels-openapi",
+  "version": "1.0.0",
+  "description": "OpenAPI specification for Statutory Action Parcels API",
+  "private": true,
+  "scripts": {
+    "lint": "redocly lint ./openapi.yaml --config ./redocly.yaml",
+    "validate": "redocly lint ./openapi.yaml --config ./redocly.yaml --format=json && echo 'Validation passed'",
+    "build-docs": "redocly build-docs ./openapi.yaml --config ./redocly.yaml -o dist/index.html",
+    "bundle": "redocly bundle ./openapi.yaml --config ./redocly.yaml -o dist/openapi-bundled.yaml",
+    "preview": "redocly preview --port 8080",
+    "stats": "redocly stats ./openapi.yaml --config ./redocly.yaml",
+    "test": "npm run lint && npm run build-docs && npm run stats"
+  },
+  "devDependencies": {
+    "@redocly/cli": "latest"
+  },
+  "keywords": [
+    "openapi",
+    "api",
+    "parcel",
+    "statutory-actions"
+  ],
+  "license": "MIT"
+}
