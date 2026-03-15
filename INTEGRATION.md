@@ -6,7 +6,7 @@ This guide explains the full pipeline for consuming the Statutory Action Parcels
 
 ```
 ┌──────────────────────────────┐
-│   openapi/openapi.yaml       │  ← OpenAPI 3.1 specification
+│   openapi/openapi.yaml       │  ← OpenAPI 3.0.3 specification
 │   (PATCH /parcels)           │
 └──────────┬────────────────────┘
            │

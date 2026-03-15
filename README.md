@@ -1,11 +1,11 @@
 # Statutory Action Parcels API — OpenAPI Specification & React Example
 
-Complete OpenAPI 3.1 specification and type-safe React client example for the Statutory Action Parcels API bulk operations endpoint.
+Complete OpenAPI 3.0.3 specification and type-safe React client example for the Statutory Action Parcels API bulk operations endpoint.
 
 ## Overview
 
 This project includes:
-- **OpenAPI 3.1 specification** for the `PATCH /parcels` endpoint
+- **OpenAPI 3.0.3 specification** for the `PATCH /parcels` endpoint
 - **React + TypeScript example client** with type-safe code generation from the spec
 - **Mock backend** (MSW) for local testing without a real server
 
@@ -156,7 +156,7 @@ pnx-parcel-network-open-api-design/
 
 ## Validation & Documentation
 
-The spec is validated and passes OpenAPI 3.1 compliance. From the `openapi/` directory:
+The spec is validated and passes OpenAPI 3.0.3 compliance. From the `openapi/` directory:
 
 ```bash
 cd openapi
@@ -220,8 +220,8 @@ This updates `example/src/api/openapi-types.ts` with the latest spec definitions
 
 ## External References
 
-- [OpenAPI 3.1 Specification](https://spec.openapis.org/oas/v3.1.0)
-- [Discriminator Pattern](https://spec.openapis.org/oas/v3.1.0#discriminator-object)
+- [OpenAPI 3.0.3 Specification](https://spec.openapis.org/oas/v3.0.3)
+- [Discriminator Pattern](https://spec.openapis.org/oas/v3.0.3#discriminator-object)
 - [HTTP PATCH RFC 5789](https://tools.ietf.org/html/rfc5789)
 - [openapi-typescript Documentation](https://openapi-ts.dev/)
 - [TanStack Query Documentation](https://tanstack.com/query/latest)

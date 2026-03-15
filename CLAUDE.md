@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **full-stack example** demonstrating OpenAPI 3.1 specification consumption in a React TypeScript frontend.
+This is a **full-stack example** demonstrating OpenAPI 3.0.3 specification consumption in a React TypeScript frontend.
 
 **Core components:**
-- `openapi.yaml` — OpenAPI 3.1 spec defining `PATCH /parcels` with bulk create/update/delete operations
+- `openapi.yaml` — OpenAPI 3.0.3 spec defining `PATCH /parcels` with bulk create/update/delete operations
 - `example/` — React + TypeScript client example using type-safe code generation from the spec
 - `mocks/` — MSW (Mock Service Worker) browser-level request interception for local testing
 

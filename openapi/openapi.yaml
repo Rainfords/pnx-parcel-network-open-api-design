@@ -1,14 +1,16 @@
-openapi: 3.1.0
+openapi: 3.0.3
 
 info:
   title: Statutory Action Parcels API
   version: 1.0.0
   description: |
     API for managing Statutory Action Parcel data.
+    Supports fetching all parcels with a GET request.
     Supports bulk create, update, and delete operations in a single PATCH request.
+
   license:
     name: MIT
-    identifier: MIT
+    url: https://opensource.org/licenses/MIT
 
 servers:
   - url: https://api.statutory-actions.local/v1
@@ -23,7 +25,7 @@ paths:
         Returns the complete set of parcel records with all read-only server-managed fields.
       operationId: getParcels
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         '200':
           description: Collection of parcels retrieved successfully
@@ -83,7 +85,7 @@ paths:
         The endpoint processes all rows in order and returns per-row results indicating success or failure.
       operationId: patchParcels
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         required: true
         content:
@@ -216,7 +218,7 @@ components:
       properties:
         operation:
           type: string
-          enum: [create]
+          enum: [ create ]
           description: Operation type identifier
         purpose:
           type: string
@@ -228,10 +230,12 @@ components:
           type: string
           description: Name or identifier for the parcel
         comments:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Optional comments about the parcel
         imageId:
-          type: [integer, "null"]
+          type: integer
+          nullable: true
           description: Optional reference to an associated image
       additionalProperties: false
 
@@ -243,7 +247,7 @@ components:
       properties:
         operation:
           type: string
-          enum: [update]
+          enum: [ update ]
           description: Operation type identifier
         parcelId:
           type: integer
@@ -258,10 +262,12 @@ components:
           type: string
           description: Name or identifier for the parcel (optional field for partial updates)
         comments:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Optional comments about the parcel
         imageId:
-          type: [integer, "null"]
+          type: integer
+          nullable: true
           description: Optional reference to an associated image
       additionalProperties: false
 
@@ -273,7 +279,7 @@ components:
       properties:
         operation:
           type: string
-          enum: [delete]
+          enum: [ delete ]
           description: Operation type identifier
         parcelId:
           type: integer
@@ -299,7 +305,7 @@ components:
       properties:
         operation:
           type: string
-          enum: [create, update, delete]
+          enum: [ create, update, delete ]
           description: The operation type that was performed
         parcelId:
           type: integer
@@ -308,7 +314,7 @@ components:
             For update and delete operations, this echoes the requested parcelId.
         status:
           type: string
-          enum: [success, error]
+          enum: [ success, error ]
           description: Outcome of the operation
         error:
           type: string
@@ -341,28 +347,36 @@ components:
           type: integer
           description: Unique identifier for the parcel (e.g., 3100000)
         appellation:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Legal description of the parcel (e.g., "Lot A, Block 1"). Server-managed read-only field.
         action:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Statutory action associated with the parcel (e.g., "Create", "Extinguished"). Server-managed read-only field.
         parcelIntent:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Intent of the parcel (e.g., "Road", "DCDB"). Server-managed read-only field.
         purpose:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Purpose of the parcel (e.g., "Land Declared Road")
         purposeStatus:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Status of the parcel's purpose (e.g., "Current", "Historic")
         name:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Name or identifier for the parcel
         comments:
-          type: [string, "null"]
+          type: string
+          nullable: true
           description: Optional comments about the parcel
         imageId:
-          type: [integer, "null"]
+          type: integer
+          nullable: true
           description: Optional reference to an associated image (e.g., 4100000)
 
     GetParcelsResponse:

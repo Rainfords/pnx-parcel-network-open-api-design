@@ -185,7 +185,7 @@ npm run build-docs
 ## Useful Redocly Resources
 
 - [Redocly CLI Docs](https://redocly.com/docs/cli/)
-- [OpenAPI 3.1 Spec](https://spec.openapis.org/oas/v3.1.0)
+- [OpenAPI 3.0.3 Spec](https://spec.openapis.org/oas/v3.0.3)
 - [API Design Best Practices](https://redocly.com/docs/guides/api-design-best-practices/)
 
 ## Next Steps
