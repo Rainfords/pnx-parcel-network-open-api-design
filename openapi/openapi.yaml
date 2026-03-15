@@ -17,7 +17,14 @@ servers:
     description: Production API
 
 paths:
-  /parcels:
+  /stat-actions/{statActionId}/parcels:
+    parameters:
+      - name: statActionId
+        in: path
+        required: true
+        description: Unique identifier of the statutory action.
+        schema:
+          type: integer
     get:
       summary: Get all statutory action parcels
       description: |

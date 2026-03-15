@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 import type { components } from '@/api/openapi-types'
 
-// In-memory state seeded from the spec's GET /parcels example
+// In-memory state seeded from the spec's GET /stat-actions/{statActionId}/parcels example
 let parcels: components['schemas']['Parcel'][] = [
   {
     parcelId: 3100000,
@@ -30,17 +30,18 @@ let parcels: components['schemas']['Parcel'][] = [
 let nextParcelId = 3100002
 
 export const handlers = [
-  // GET /parcels — return current state
-  http.get('https://api.statutory-actions.local/v1/parcels', () => {
+  // GET /stat-actions/{statActionId}/parcels — return current state
+  http.get('https://api.statutory-actions.local/v1/stat-actions/:statActionId/parcels', ({ params }) => {
+    console.log('[MSW] GET parcels for statActionId:', params.statActionId)
     return HttpResponse.json({
       parcels,
     })
   }),
 
-  // PATCH /parcels — bulk create/update/delete
-  http.patch('https://api.statutory-actions.local/v1/parcels', async ({ request }) => {
+  // PATCH /stat-actions/{statActionId}/parcels — bulk create/update/delete
+  http.patch('https://api.statutory-actions.local/v1/stat-actions/:statActionId/parcels', async ({ request, params }) => {
     const body = (await request.json()) as components['schemas']['PatchParcelsRequest']
-    console.log('[MSW] PATCH /parcels request:', body)
+    console.log('[MSW] PATCH parcels request:', { statActionId: params.statActionId, body })
     const results: components['schemas']['ParcelRowResult'][] = []
 
     for (const row of body.rows) {
@@ -115,7 +116,7 @@ export const handlers = [
     const response = {
       results,
     }
-    console.log('[MSW] PATCH /parcels response:', { status: statusCode, body: response })
+    console.log('[MSW] PATCH parcels response:', { statActionId: params.statActionId, status: statusCode, body: response })
 
     return HttpResponse.json(response, { status: statusCode })
   }),

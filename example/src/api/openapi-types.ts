@@ -4,11 +4,14 @@
  */
 
 export interface paths {
-    "/parcels": {
+    "/stat-actions/{statActionId}/parcels": {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Unique identifier of the statutory action. */
+                statActionId: number;
+            };
             cookie?: never;
         };
         /**
@@ -162,7 +165,10 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Unique identifier of the statutory action. */
+                statActionId: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -200,7 +206,10 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                /** @description Unique identifier of the statutory action. */
+                statActionId: number;
+            };
             cookie?: never;
         };
         requestBody: {

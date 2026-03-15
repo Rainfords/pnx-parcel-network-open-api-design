@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a **full-stack example** demonstrating OpenAPI 3.0.3 specification consumption in a React TypeScript frontend.
 
 **Core components:**
-- `openapi.yaml` — OpenAPI 3.0.3 spec defining `PATCH /parcels` with bulk create/update/delete operations
+- `openapi.yaml` — OpenAPI 3.0.3 spec defining `PATCH /stat-actions/{statActionId}/parcels` with bulk create/update/delete operations
 - `example/` — React + TypeScript client example using type-safe code generation from the spec
 - `mocks/` — MSW (Mock Service Worker) browser-level request interception for local testing
 
@@ -19,7 +19,7 @@ This is a **full-stack example** demonstrating OpenAPI 3.0.3 specification consu
 ```
 .
 ├── openapi/                        # OpenAPI spec and Redocly config
-│   ├── openapi.yaml               # API specification (PATCH /parcels, discriminator pattern)
+│   ├── openapi.yaml               # API specification (PATCH /stat-actions/{statActionId}/parcels, discriminator pattern)
 │   ├── redocly.yaml               # Redocly configuration
 │   ├── package.json               # Redocly scripts (lint, build-docs, preview, etc.)
 │   └── dist/                      # Generated API documentation
@@ -135,10 +135,10 @@ setRows((prev) => {
 See `ParcelTable.tsx:onSuccess` callback for the applied fix.
 
 ### 4. MSW Mock Backend
-The example uses MSW v2 to intercept fetch requests in the browser at `https://api.statutory-actions.local/v1/parcels`. This allows testing the full CRUD flow without a real backend.
+The example uses MSW v2 to intercept fetch requests in the browser at `https://api.statutory-actions.local/v1/stat-actions/{statActionId}/parcels`. This allows testing the full CRUD flow without a real backend.
 
 **Key files:**
-- `src/mocks/handlers.ts` — GET `/parcels` (returns in-memory parcel array) and PATCH `/parcels` (processes operations, updates in-memory state)
+- `src/mocks/handlers.ts` — GET `/stat-actions/{statActionId}/parcels` (returns in-memory parcel array) and PATCH `/stat-actions/{statActionId}/parcels` (processes operations, updates in-memory state)
 - `src/mocks/browser.ts` — Exports `setupWorker(...handlers)`
 - `src/main.tsx` — Conditionally starts worker in dev mode before rendering
 

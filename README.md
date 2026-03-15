@@ -5,11 +5,11 @@ Complete OpenAPI 3.0.3 specification and type-safe React client example for the 
 ## Overview
 
 This project includes:
-- **OpenAPI 3.0.3 specification** for the `PATCH /parcels` endpoint
+- **OpenAPI 3.0.3 specification** for the `PATCH /stat-actions/{statActionId}/parcels` endpoint
 - **React + TypeScript example client** with type-safe code generation from the spec
 - **Mock backend** (MSW) for local testing without a real server
 
-The `PATCH /parcels` endpoint handles **bulk create, update, and delete operations** in a single atomic request.
+The `PATCH /stat-actions/{statActionId}/parcels` endpoint handles **bulk create, update, and delete operations** in a single atomic request.
 
 ### Use Case
 
@@ -28,7 +28,10 @@ Then submit the entire form in one PATCH request.
 ### Endpoint
 
 ```
-PATCH /parcels
+PATCH /stat-actions/{statActionId}/parcels
+
+Path parameter:
+- `statActionId` (integer, required)
 ```
 
 ### Request Format

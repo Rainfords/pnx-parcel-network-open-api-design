@@ -72,17 +72,22 @@ The `usePatchParcels` hook is fully typed from the spec:
 ```typescript
 const { mutate, isPending, error, data } = usePatchParcels({
   onSuccess: (response) => {
-    // response.body is typed as PatchParcelsResponse
-    const results = response.body.results;
+    // response is typed as PatchParcelsResponse
+    const results = response.results;
   },
   onError: (error) => {
     // error is typed as ErrorResponse
-    console.error(error.body.error);
+    console.error(error);
   },
 });
 
 // Calling it with fully typed request body
 mutate({
+  params: {
+    path: {
+      statActionId: 3100,
+    },
+  },
   body: {
     rows: [
       { operation: "create", purpose: "Residential", purposeStatus: "Active", name: "Lot A" },
@@ -118,13 +123,11 @@ When some rows succeed and others fail:
 
 ```typescript
 onSuccess: (response) => {
-  if (response.status === 207) {
-    // Check for per-row errors
-    const failed = response.body.results.filter((r) => r.status === "error");
-    failed.forEach((result) => {
-      console.error(`Row ${result.parcelId} failed: ${result.error}`);
-    });
-  }
+  // Check for per-row errors
+  const failed = response.results.filter((r) => r.status === "error");
+  failed.forEach((result) => {
+    console.error(`Row ${result.parcelId} failed: ${result.error}`);
+  });
 },
 ```
 
@@ -134,7 +137,7 @@ When a create operation succeeds, the server assigns a `parcelId`:
 
 ```typescript
 onSuccess: (response) => {
-  response.body.results.forEach((result) => {
+  response.results.forEach((result) => {
     if (result.operation === "create" && result.status === "success") {
       console.log(`New parcel assigned ID: ${result.parcelId}`);
     }
@@ -168,6 +171,24 @@ To override, set the `VITE_API_BASE_URL` environment variable:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:3000/api/v1 npm run dev
+```
+
+### Stat Action ID
+
+The demo submits requests to `/stat-actions/{statActionId}/parcels` and therefore needs a stat action ID.
+
+By default, `ParcelTable` falls back to `3100` when `VITE_STAT_ACTION_ID` is not set.
+
+To explicitly configure it:
+
+```bash
+VITE_STAT_ACTION_ID=3100 npm run dev
+```
+
+You can combine both values when testing against a real API:
+
+```bash
+VITE_API_BASE_URL=http://localhost:3000/api/v1 VITE_STAT_ACTION_ID=3100 npm run dev
 ```
 
 ### Query Client Options
@@ -214,6 +235,11 @@ The `UpdateParcelRow` schema allows partial updates. Only include fields you wan
 
 ```typescript
 mutate({
+  params: {
+    path: {
+      statActionId: 3100,
+    },
+  },
   body: {
     rows: [
       {
@@ -246,13 +272,8 @@ export const client = createClient<paths>({
 ```typescript
 usePatchParcels({
   onError: (error) => {
-    if (error.status === 422) {
-      // Handle validation errors
-      console.error("Validation failed:", error.body.error);
-    } else if (error.status === 401) {
-      // Handle auth errors
-      redirectToLogin();
-    }
+    // openapi-react-query exposes a typed error object; inspect and branch as needed
+    console.error("Request failed:", error);
   },
 });
 ```

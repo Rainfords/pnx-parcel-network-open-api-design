@@ -7,7 +7,7 @@ This guide explains the full pipeline for consuming the Statutory Action Parcels
 ```
 ┌──────────────────────────────┐
 │   openapi/openapi.yaml       │  ← OpenAPI 3.0.3 specification
-│   (PATCH /parcels)           │
+│   (PATCH /stat-actions/{statActionId}/parcels) │
 └──────────┬────────────────────┘
            │
            ├─→ cd openapi && npm run lint          (validate spec)
@@ -35,7 +35,8 @@ This guide explains the full pipeline for consuming the Statutory Action Parcels
 
 The spec is already defined in `openapi.yaml`:
 
-- Endpoint: `PATCH /parcels`
+- Endpoint: `PATCH /stat-actions/{statActionId}/parcels`
+- Required path param: `statActionId` (integer)
 - Request: `PatchParcelsRequest` with array of `ParcelRow` objects
 - Response: `PatchParcelsResponse` with per-row results
 - Operations: `create`, `update`, `delete` (discriminated union on `operation` field)
@@ -136,7 +137,7 @@ In `example/src/hooks/usePatchParcels.ts`:
 
 ```typescript
 export function usePatchParcels(options?: any) {
-  return $api.useMutation('patch', '/parcels', options);
+  return $api.useMutation('patch', '/stat-actions/{statActionId}/parcels', options);
 }
 ```
 
@@ -154,14 +155,20 @@ In your component:
 import { usePatchParcels } from '@/hooks/usePatchParcels';
 
 export function MyForm() {
+  const statActionId = 3100;
   const { mutate, isPending, data, error } = usePatchParcels({
     onSuccess: (response) => {
-      console.log('Results:', response.body.results);
+      console.log('Results:', response.results);
     },
   });
 
   const handleSubmit = () => {
     mutate({
+      params: {
+        path: {
+          statActionId,
+        },
+      },
       body: {
         rows: [
           {
@@ -189,8 +196,8 @@ export function MyForm() {
       <button onClick={handleSubmit} disabled={isPending}>
         {isPending ? 'Saving...' : 'Save'}
       </button>
-      {error && <div>Error: {error.body.error}</div>}
-      {data && <div>Results: {data.body.results.length} rows processed</div>}
+      {error && <div>Error: {JSON.stringify(error)}</div>}
+      {data && <div>Results: {data.results.length} rows processed</div>}
     </div>
   );
 }
@@ -200,7 +207,7 @@ export function MyForm() {
 
 - ✅ **Request body** — TypeScript enforces correct structure for `rows[]`
 - ✅ **Discriminated union** — TypeScript narrows `ParcelRow` type based on `operation`
-- ✅ **Response shape** — Autocomplete on `response.body.results[].status`
+- ✅ **Response shape** — Autocomplete on `response.results[].status`
 - ✅ **Error handling** — Type-safe error shape via `ErrorResponse`
 
 ### Discriminated Union Example
@@ -224,23 +231,21 @@ rows.forEach((row) => {
 });
 ```
 
-## Step 7: Handle 207 Partial Success
+## Step 7: Handle Partial Success
 
-When some rows fail and others succeed, the API returns 207:
+When some rows fail and others succeed, the API response includes per-row `status: "error"` results:
 
 ```typescript
 const { mutate } = usePatchParcels({
   onSuccess: (response) => {
-    if (response.status === 207) {
-      // Some rows failed
-      const failed = response.body.results.filter((r) => r.status === 'error');
+    const failed = response.results.filter((r) => r.status === 'error');
+    if (failed.length > 0) {
       failed.forEach((result) => {
         console.error(`Row ${result.parcelId} failed: ${result.error}`);
       });
-    } else {
-      // All rows succeeded (200)
-      console.log('All rows saved');
+      return;
     }
+    console.log('All rows saved');
   },
 });
 ```

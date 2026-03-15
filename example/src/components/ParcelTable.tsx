@@ -29,9 +29,11 @@ interface ClientParcelRow extends Record<string, any> {
 
 export function ParcelTable() {
   const [rows, setRows] = useState<ClientParcelRow[]>([]);
-  const { data: getParcelsData, isPending: isLoadingParcels, error: loadError } = useGetParcels();
+  const configuredStatActionId = Number(import.meta.env.VITE_STAT_ACTION_ID);
+  const statActionId = Number.isFinite(configuredStatActionId) ? configuredStatActionId : 3100;
+  const { data: getParcelsData, isPending: isLoadingParcels, error: loadError } = useGetParcels(statActionId);
 
-  // Load initial parcel data from GET /parcels when component mounts
+  // Load initial parcel data from GET /stat-actions/{statActionId}/parcels when component mounts
   useEffect(() => {
     if (getParcelsData?.parcels) {
       const initialRows: ClientParcelRow[] = getParcelsData.parcels.map((parcel: Parcel) => ({
@@ -224,7 +226,14 @@ export function ParcelTable() {
       alert("No changes to submit");
       return;
     }
-    mutate({ body: { rows: diff } });
+    mutate({
+      params: {
+        path: {
+          statActionId,
+        },
+      },
+      body: { rows: diff },
+    });
   };
 
   const hasChanges = rows.some((r) => r._operation !== "none");

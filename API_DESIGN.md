@@ -3,7 +3,7 @@
 ## Document Control
 
 - **Document type:** API design note
-- **Scope:** `GET /parcels` read endpoint and `PATCH /parcels` bulk mutation endpoint
+- **Scope:** `GET /stat-actions/{statActionId}/parcels` read endpoint and `PATCH /stat-actions/{statActionId}/parcels` bulk mutation endpoint
 - **Specification source:** `openapi/openapi.yaml`
 - **OpenAPI version:** 3.0.3
 - **Status:** Draft for design review
@@ -14,8 +14,8 @@ This document describes the design intent, contract, and operational behavior of
 
 The API supports two primary frontend needs:
 
-- Fetching the current parcel set for table initialization (`GET /parcels`)
-- Submitting mixed row actions in one request (`PATCH /parcels`)
+- Fetching the current parcel set for table initialization (`GET /stat-actions/{statActionId}/parcels`)
+- Submitting mixed row actions in one request (`PATCH /stat-actions/{statActionId}/parcels`)
 
 ## 2. Problem Statement
 
@@ -52,8 +52,9 @@ The batch write contract is designed to:
 
 ### Endpoints
 
-- **GET `/parcels`**: retrieve all statutory action parcels
-- **PATCH `/parcels`**: apply bulk create/update/delete row operations
+- **GET `/stat-actions/{statActionId}/parcels`**: retrieve all statutory action parcels
+- **PATCH `/stat-actions/{statActionId}/parcels`**: apply bulk create/update/delete row operations
+- **Path parameter:** `statActionId` (integer, required)
 - **Media type:** `application/json`
 
 ### Authentication
@@ -62,12 +63,12 @@ The batch write contract is designed to:
 
 ### Core Contract Patterns
 
-`GET /parcels` returns `GetParcelsResponse`:
+`GET /stat-actions/{statActionId}/parcels` returns `GetParcelsResponse`:
 
 - `parcels: Parcel[]`
 - Includes server-managed fields such as `appellation`, `action`, and `parcelIntent`
 
-`PATCH /parcels` request contains `rows[]`, where each row is a discriminated union by `operation`:
+`PATCH /stat-actions/{statActionId}/parcels` request contains `rows[]`, where each row is a discriminated union by `operation`:
 
 - `create`
 - `update`
@@ -88,7 +89,7 @@ This pattern is modeled in OpenAPI using `oneOf` + `discriminator` and generates
 - Required: `parcelId`
 - Nullable read-oriented/domain fields: `appellation`, `action`, `parcelIntent`, `purpose`, `purposeStatus`, `name`, `comments`, `imageId`
 
-`GET /parcels` status behavior:
+`GET /stat-actions/{statActionId}/parcels` status behavior:
 
 - `200 OK`: collection returned
 - `401 Unauthorized`: missing/invalid bearer token
@@ -131,7 +132,7 @@ Client integration note: generated React query usage receives parsed body shape 
 
 ## 6.1 Ordering
 
-For `PATCH /parcels`, rows are processed in request order. This is important when later rows depend on prior state changes.
+For `PATCH /stat-actions/{statActionId}/parcels`, rows are processed in request order. This is important when later rows depend on prior state changes.
 
 ## 6.2 Success and Partial Success
 
@@ -143,7 +144,7 @@ Expected status behavior:
 - `422 Unprocessable Entity`: semantically valid shape but domain invalid (for example, update/delete on missing `parcelId`)
 - `500 Internal Server Error`: unexpected server failure
 
-For `GET /parcels`, expected status behavior is `200`, `401`, and `500`.
+For `GET /stat-actions/{statActionId}/parcels`, expected status behavior is `200`, `401`, and `500`.
 
 ## 6.3 Idempotency Considerations
 
@@ -175,7 +176,7 @@ Recommended backend behavior:
 
 Recommended telemetry:
 
-- Request count and latency for `GET /parcels` and `PATCH /parcels`
+- Request count and latency for `GET /stat-actions/{statActionId}/parcels` and `PATCH /stat-actions/{statActionId}/parcels`
 - Distribution of row counts per request
 - Row success/failure rates by operation type
 - Top row-level error codes
@@ -203,9 +204,9 @@ If frequent breaking change risk is expected, introduce explicit versioning poli
 
 Frontend pattern enabled by this API:
 
-1. Fetch current table records via `GET /parcels`
+1. Fetch current table records via `GET /stat-actions/{statActionId}/parcels`
 2. Build a local row-edit model in table UI
-3. Submit all pending row deltas as `rows[]` to `PATCH /parcels`
+3. Submit all pending row deltas as `rows[]` to `PATCH /stat-actions/{statActionId}/parcels`
 4. Reconcile UI state from per-row `results[]`
 
 Type-safety notes:
@@ -217,8 +218,8 @@ Type-safety notes:
 
 Minimum test matrix:
 
-- `GET /parcels` contract tests (`200/401/500`)
-- `GET /parcels` response shape tests for nullable parcel fields
+- `GET /stat-actions/{statActionId}/parcels` contract tests (`200/401/500`)
+- `GET /stat-actions/{statActionId}/parcels` response shape tests for nullable parcel fields
 - Contract tests for each operation schema branch
 - Mixed-operation batch tests with ordered assertions
 - Partial success tests returning `207`
