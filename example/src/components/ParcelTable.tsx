@@ -29,13 +29,36 @@ interface ClientParcelRow extends Record<string, any> {
 
 export function ParcelTable() {
   const [rows, setRows] = useState<ClientParcelRow[]>([]);
+  const [statutoryAction, setStatutoryAction] = useState<any>({
+    statutoryActionType: "",
+    status: "",
+    gazetteYear: "",
+    gazettePage: 0,
+    gazetteType: "",
+    otherLegality: "",
+    gazetteNoticeId: 0,
+  });
+  const [originalStatutoryAction, setOriginalStatutoryAction] = useState<any>(null);
   const configuredStatActionId = Number(import.meta.env.VITE_STAT_ACTION_ID);
   const statActionId = Number.isFinite(configuredStatActionId) ? configuredStatActionId : 3100;
   const { data: getParcelsData, isPending: isLoadingParcels, error: loadError } = useGetParcels(statActionId);
 
-  // Load initial parcel data from GET /stat-actions/{statActionId}/parcels when component mounts
+  // Load initial parcel data from GET /statutory-actions/{statActionId} when component mounts
   useEffect(() => {
-    if (getParcelsData?.parcels) {
+    if (getParcelsData) {
+      // Store original statutory action data for comparison
+      const actionData = {
+        statutoryActionType: getParcelsData.statutoryActionType || "",
+        status: getParcelsData.status || "",
+        gazetteYear: getParcelsData.gazetteYear || "",
+        gazettePage: getParcelsData.gazettePage || 0,
+        gazetteType: getParcelsData.gazetteType || "",
+        otherLegality: getParcelsData.otherLegality || "",
+        gazetteNoticeId: getParcelsData.gazetteNoticeId || 0,
+      };
+      setOriginalStatutoryAction(actionData);
+      setStatutoryAction(actionData);
+      
       const initialRows: ClientParcelRow[] = getParcelsData.parcels.map((parcel: Parcel) => ({
         _id: String(parcel.parcelId),
         _operation: "none",
@@ -184,7 +207,7 @@ export function ParcelTable() {
     setRows((prev) => prev.filter((r) => r));
   };
 
-  const computeDiff = (): ParcelRow[] => {
+  const computeParcelDiff = (): ParcelRow[] => {
     return rows
       .filter((row) => row._operation !== "none")
       .map((row) => {
@@ -220,23 +243,58 @@ export function ParcelTable() {
       .filter(Boolean);
   };
 
+  const computeStatutoryActionDiff = (): Partial<any> => {
+    if (!originalStatutoryAction) return {};
+    
+    const diff: any = {};
+    const fields = [
+      'statutoryActionType',
+      'status',
+      'gazetteYear',
+      'gazettePage',
+      'gazetteType',
+      'otherLegality',
+      'gazetteNoticeId',
+    ];
+    
+    fields.forEach((field) => {
+      if (statutoryAction[field] !== originalStatutoryAction[field]) {
+        diff[field] = statutoryAction[field];
+      }
+    });
+    
+    return diff;
+  };
+
   const handleSubmit = () => {
-    const diff = computeDiff();
-    if (diff.length === 0) {
+    const parcelDiff = computeParcelDiff();
+    const actionDiff = computeStatutoryActionDiff();
+    
+    if (parcelDiff.length === 0 && Object.keys(actionDiff).length === 0) {
       alert("No changes to submit");
       return;
     }
+    
+    const payload: any = {
+      rows: parcelDiff,
+    };
+    
+    // Add statutory action fields if any changed
+    Object.assign(payload, actionDiff);
+    
     mutate({
       params: {
         path: {
           statActionId,
         },
       },
-      body: { rows: diff },
+      body: payload,
     });
   };
 
-  const hasChanges = rows.some((r) => r._operation !== "none");
+  const hasParcelChanges = rows.some((r) => r._operation !== "none");
+  const hasActionChanges = Object.keys(computeStatutoryActionDiff()).length > 0;
+  const hasChanges = hasParcelChanges || hasActionChanges;
 
   return (
     <div className="parcel-table">
@@ -247,6 +305,97 @@ export function ParcelTable() {
         types from the OpenAPI spec.
       </p>
 
+      {isLoadingParcels && (
+        <div className="loading-alert">
+          <strong>Loading statutory action...</strong>
+        </div>
+      )}
+
+      {getParcelsData && (
+        <div className="statutory-action-header">
+          <h2>Statutory Action Details</h2>
+          <div className="header-grid">
+            <div className="header-field">
+              <label>Type</label>
+              <input
+                type="text"
+                value={statutoryAction.statutoryActionType}
+                onChange={(e) => setStatutoryAction({ ...statutoryAction, statutoryActionType: e.target.value })}
+                disabled={isPending}
+              />
+            </div>
+            <div className="header-field">
+              <label>Status</label>
+              <input
+                type="text"
+                value={statutoryAction.status}
+                onChange={(e) => setStatutoryAction({ ...statutoryAction, status: e.target.value })}
+                disabled={isPending}
+              />
+            </div>
+            <div className="header-field">
+              <label>Survey Work ID (Vesting)</label>
+              <span>{getParcelsData.surveyWorkIdVesting}</span>
+            </div>
+            <div className="header-field">
+              <label>Gazette Year</label>
+              <input
+                type="text"
+                value={statutoryAction.gazetteYear}
+                onChange={(e) => setStatutoryAction({ ...statutoryAction, gazetteYear: e.target.value })}
+                disabled={isPending}
+              />
+            </div>
+            <div className="header-field">
+              <label>Gazette Page</label>
+              <input
+                type="number"
+                value={statutoryAction.gazettePage}
+                onChange={(e) => setStatutoryAction({ ...statutoryAction, gazettePage: parseInt(e.target.value) || 0 })}
+                disabled={isPending}
+              />
+            </div>
+            <div className="header-field">
+              <label>Gazette Type</label>
+              <input
+                type="text"
+                value={statutoryAction.gazetteType}
+                onChange={(e) => setStatutoryAction({ ...statutoryAction, gazetteType: e.target.value })}
+                disabled={isPending}
+              />
+            </div>
+            <div className="header-field">
+              <label>Other Legality</label>
+              <input
+                type="text"
+                value={statutoryAction.otherLegality}
+                onChange={(e) => setStatutoryAction({ ...statutoryAction, otherLegality: e.target.value })}
+                disabled={isPending}
+              />
+            </div>
+            <div className="header-field">
+              <label>Recorded Date</label>
+              <span>
+                {new Date(getParcelsData.recordedDate).toLocaleDateString('en-AU', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+            <div className="header-field">
+              <label>Gazette Notice ID</label>
+              <input
+                type="number"
+                value={statutoryAction.gazetteNoticeId}
+                onChange={(e) => setStatutoryAction({ ...statutoryAction, gazetteNoticeId: parseInt(e.target.value) || 0 })}
+                disabled={isPending}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="controls">
         <button onClick={addRow} disabled={isPending || isLoadingParcels}>
           + Add Row
@@ -256,11 +405,6 @@ export function ParcelTable() {
         </button>
       </div>
 
-      {isLoadingParcels && (
-        <div className="loading-alert">
-          <strong>Loading parcels...</strong>
-        </div>
-      )}
 
       {loadError && (
         <div className="error-alert">

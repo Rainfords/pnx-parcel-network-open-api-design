@@ -1,7 +1,7 @@
 import { $api } from '@/api/client'
 
 /**
- * TanStack Query hook for GET /stat-actions/{statActionId}/parcels
+ * TanStack Query hook for GET /statutory-actions/{statActionId}
  *
  * Fetches the collection of all statutory action parcels.
  *
@@ -12,7 +12,7 @@ import { $api } from '@/api/client'
  * }
  */
 export function useGetParcels(statActionId: number) {
-  return $api.useQuery('get', '/stat-actions/{statActionId}/parcels', {
+  return $api.useQuery('get', '/statutory-actions/{statActionId}', {
     params: {
       path: {
         statActionId,

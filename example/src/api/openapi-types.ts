@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/stat-actions/{statActionId}/parcels": {
+    "/statutory-actions/{statActionId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -15,11 +15,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get all statutory action parcels
-         * @description Retrieve a collection of all statutory action parcels.
-         *     Returns the complete set of parcel records with all read-only server-managed fields.
+         * Get statutory action with parcels
+         * @description Retrieve a statutory action record and its associated parcel collection.
+         *     Returns statutory action metadata plus all parcel records with read-only server-managed fields.
          */
-        get: operations["getParcels"];
+        get: operations["getStatutoryAction"];
         put?: never;
         post?: never;
         delete?: never;
@@ -27,17 +27,20 @@ export interface paths {
         head?: never;
         /**
          * Bulk update parcels (create, update, delete)
-         * @description Atomically apply a batch of parcel operations (create, update, delete) in a single request.
-         *     This endpoint is designed to support table-based UX patterns where users:
-         *     - Add new rows (create operations)
-         *     - Edit existing cells (update operations)
-         *     - Remove rows (delete operations)
+         * @description Atomically apply a batch of parcel operations (create, update, delete)
+         *     and optionally update statutory action metadata for the action identified by statActionId.
+         *     This endpoint is designed to support full-form UX patterns where users can:
+         *     - Update statutory action metadata (type, status, gazette fields, etc.)
+         *     - Add new parcel rows (create operations)
+         *     - Edit existing parcel cells (update operations)
+         *     - Remove parcel rows (delete operations)
          *
          *     Then submit the entire form in one PATCH request.
          *
-         *     The endpoint processes all rows in order and returns per-row results indicating success or failure.
+         *     The endpoint processes statutory action updates and all parcel rows in order,
+         *     returning per-row results and metadata update confirmation.
          */
-        patch: operations["patchParcels"];
+        patch: operations["patchStatutoryAction"];
         trace?: never;
     };
 }
@@ -45,6 +48,20 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         PatchParcelsRequest: {
+            /** @description Type/category of the statutory action (optional update) */
+            statutoryActionType?: string | null;
+            /** @description Current lifecycle status of the statutory action (optional update) */
+            status?: string | null;
+            /** @description Gazette publication year associated with the action (optional update) */
+            gazetteYear?: string | null;
+            /** @description Gazette page number (optional update) */
+            gazettePage?: number | null;
+            /** @description Gazette publication type (optional update) */
+            gazetteType?: string | null;
+            /** @description Additional legal basis text for the action (optional update) */
+            otherLegality?: string | null;
+            /** @description Gazette notice identifier (optional update) */
+            gazetteNoticeId?: number | null;
             /** @description Array of parcel operations (create, update, or delete) */
             rows: components["schemas"]["ParcelRow"][];
         };
@@ -148,7 +165,28 @@ export interface components {
             /** @description Optional reference to an associated image (e.g., 4100000) */
             imageId?: number | null;
         };
-        GetParcelsResponse: {
+        GetStatutoryActionResponse: {
+            /** @description Type/category of the statutory action. */
+            statutoryActionType: string;
+            /** @description Current lifecycle status of the statutory action. */
+            status: string;
+            /** @description Identifier for the vesting survey work. */
+            surveyWorkIdVesting: number;
+            /** @description Gazette publication year associated with the action. */
+            gazetteYear: string;
+            /** @description Gazette page number. */
+            gazettePage: number;
+            /** @description Gazette publication type. */
+            gazetteType: string;
+            /** @description Additional legal basis text for the action. */
+            otherLegality: string;
+            /**
+             * Format: date-time
+             * @description Date/time the statutory action was recorded.
+             */
+            recordedDate: string;
+            /** @description Gazette notice identifier. */
+            gazetteNoticeId: number;
             /** @description Array of statutory action parcel records */
             parcels: components["schemas"]["Parcel"][];
         };
@@ -161,7 +199,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getParcels: {
+    getStatutoryAction: {
         parameters: {
             query?: never;
             header?: never;
@@ -173,13 +211,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Collection of parcels retrieved successfully */
+            /** @description Statutory action and parcel collection retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GetParcelsResponse"];
+                    "application/json": components["schemas"]["GetStatutoryActionResponse"];
                 };
             };
             /** @description Unauthorized — invalid or missing bearer token */
@@ -202,7 +240,7 @@ export interface operations {
             };
         };
     };
-    patchParcels: {
+    patchStatutoryAction: {
         parameters: {
             query?: never;
             header?: never;

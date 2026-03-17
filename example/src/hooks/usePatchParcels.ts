@@ -1,7 +1,7 @@
 import { $api } from '@/api/client'
 
 /**
- * TanStack Query mutation hook for PATCH /stat-actions/{statActionId}/parcels
+ * TanStack Query mutation hook for PATCH /statutory-actions/{statActionId}
  *
  * Handles bulk create/update/delete operations on parcel rows.
  *
@@ -27,5 +27,5 @@ import { $api } from '@/api/client'
  * })
  */
 export function usePatchParcels(options?: any) {
-  return $api.useMutation('patch', '/stat-actions/{statActionId}/parcels', options)
+  return $api.useMutation('patch', '/statutory-actions/{statActionId}', options)
 }

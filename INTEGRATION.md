@@ -7,7 +7,7 @@ This guide explains the full pipeline for consuming the Statutory Action Parcels
 ```
 ┌──────────────────────────────┐
 │   openapi/openapi.yaml       │  ← OpenAPI 3.0.3 specification
-│   (PATCH /stat-actions/{statActionId}/parcels) │
+│   (GET/PATCH /statutory-actions/{statActionId}) │
 └──────────┬────────────────────┘
            │
            ├─→ cd openapi && npm run lint          (validate spec)
@@ -35,7 +35,7 @@ This guide explains the full pipeline for consuming the Statutory Action Parcels
 
 The spec is already defined in `openapi.yaml`:
 
-- Endpoint: `PATCH /stat-actions/{statActionId}/parcels`
+- Endpoints: `GET /statutory-actions/{statActionId}` and `PATCH /statutory-actions/{statActionId}`
 - Required path param: `statActionId` (integer)
 - Request: `PatchParcelsRequest` with array of `ParcelRow` objects
 - Response: `PatchParcelsResponse` with per-row results
@@ -137,7 +137,7 @@ In `example/src/hooks/usePatchParcels.ts`:
 
 ```typescript
 export function usePatchParcels(options?: any) {
-  return $api.useMutation('patch', '/stat-actions/{statActionId}/parcels', options);
+  return $api.useMutation('patch', '/statutory-actions/{statActionId}', options);
 }
 ```
 

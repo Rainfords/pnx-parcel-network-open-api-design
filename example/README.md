@@ -175,7 +175,7 @@ VITE_API_BASE_URL=http://localhost:3000/api/v1 npm run dev
 
 ### Stat Action ID
 
-The demo submits requests to `/stat-actions/{statActionId}/parcels` and therefore needs a stat action ID.
+The demo submits requests to `/statutory-actions/{statActionId}` and therefore needs a stat action ID.
 
 By default, `ParcelTable` falls back to `3100` when `VITE_STAT_ACTION_ID` is not set.
 

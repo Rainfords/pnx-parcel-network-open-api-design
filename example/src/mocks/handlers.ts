@@ -1,7 +1,19 @@
 import { http, HttpResponse } from 'msw'
 import type { components } from '@/api/openapi-types'
 
-// In-memory state seeded from the spec's GET /stat-actions/{statActionId}/parcels example
+// In-memory statutory action state seeded from the spec's GET /statutory-actions/{statActionId} example
+let statutoryActionData = {
+  statutoryActionType: 'Road Closure',
+  status: 'Active',
+  surveyWorkIdVesting: 22001,
+  gazetteYear: '2026',
+  gazettePage: 145,
+  gazetteType: 'Government Gazette',
+  otherLegality: 'Transport Infrastructure Act',
+  recordedDate: '2026-02-18T10:25:30Z',
+  gazetteNoticeId: 900123,
+}
+
 let parcels: components['schemas']['Parcel'][] = [
   {
     parcelId: 3100000,
@@ -30,18 +42,31 @@ let parcels: components['schemas']['Parcel'][] = [
 let nextParcelId = 3100002
 
 export const handlers = [
-  // GET /stat-actions/{statActionId}/parcels — return current state
-  http.get('https://api.statutory-actions.local/v1/stat-actions/:statActionId/parcels', ({ params }) => {
+  // GET /statutory-actions/{statActionId} — return statutory action metadata and current parcels
+  http.get('https://api.statutory-actions.local/v1/statutory-actions/:statActionId', ({ params }) => {
     console.log('[MSW] GET parcels for statActionId:', params.statActionId)
     return HttpResponse.json({
+      ...statutoryActionData,
       parcels,
     })
   }),
 
-  // PATCH /stat-actions/{statActionId}/parcels — bulk create/update/delete
-  http.patch('https://api.statutory-actions.local/v1/stat-actions/:statActionId/parcels', async ({ request, params }) => {
+  // PATCH /statutory-actions/{statActionId} — bulk create/update/delete parcels and update statutory action metadata
+  http.patch('https://api.statutory-actions.local/v1/statutory-actions/:statActionId', async ({ request, params }) => {
     const body = (await request.json()) as components['schemas']['PatchParcelsRequest']
     console.log('[MSW] PATCH parcels request:', { statActionId: params.statActionId, body })
+    
+    // Update statutory action metadata if provided
+    const actionFields = ['statutoryActionType', 'status', 'gazetteYear', 'gazettePage', 'gazetteType', 'otherLegality', 'gazetteNoticeId']
+    actionFields.forEach((field) => {
+      if (field in body && body[field as keyof typeof body] !== undefined) {
+        statutoryActionData = {
+          ...statutoryActionData,
+          [field]: body[field as keyof typeof body],
+        }
+      }
+    })
+    
     const results: components['schemas']['ParcelRowResult'][] = []
 
     for (const row of body.rows) {
