@@ -1,13 +1,13 @@
 openapi: 3.0.3
 
 info:
-  title: Statutory Action Parcels API
+  title: Statutory Actions API
   version: 1.0.0
   description: |
-    API for managing Statutory Action Parcel data.
-    Supports fetching all parcels with a GET request.
+    API for managing Statutory Actions and Parcel data.
+    Supports fetching Statutory Action and all parcels with a GET request.
     Supports bulk create, update, and delete operations in a single PATCH request.
-
+    Including the Statutory Action metadata update in the same PATCH payload
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT

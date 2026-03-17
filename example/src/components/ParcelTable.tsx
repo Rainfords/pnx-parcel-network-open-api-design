@@ -38,7 +38,7 @@ export function ParcelTable() {
     otherLegality: "",
     gazetteNoticeId: 0,
   });
-  const [originalStatutoryAction, setOriginalStatutoryAction] = useState<any>(null);
+  const [lastSubmittedStatutoryAction, setLastSubmittedStatutoryAction] = useState<any>(null);
   const configuredStatActionId = Number(import.meta.env.VITE_STAT_ACTION_ID);
   const statActionId = Number.isFinite(configuredStatActionId) ? configuredStatActionId : 3100;
   const { data: getParcelsData, isPending: isLoadingParcels, error: loadError } = useGetParcels(statActionId);
@@ -56,8 +56,8 @@ export function ParcelTable() {
         otherLegality: getParcelsData.otherLegality || "",
         gazetteNoticeId: getParcelsData.gazetteNoticeId || 0,
       };
-      setOriginalStatutoryAction(actionData);
       setStatutoryAction(actionData);
+      setLastSubmittedStatutoryAction(actionData);
       
       const initialRows: ClientParcelRow[] = getParcelsData.parcels.map((parcel: Parcel) => ({
         _id: String(parcel.parcelId),
@@ -150,6 +150,9 @@ export function ParcelTable() {
           alert(
             "Some rows failed. Check the table for errors.\n\nNote: In a real app, you would display per-row validation errors in the UI.",
           );
+        } else {
+          // Mark statutory action state as submitted (only on success, not on partial errors)
+          setLastSubmittedStatutoryAction({ ...statutoryAction });
         }
       } catch (err) {
         console.error('PATCH error:', err);
@@ -244,7 +247,7 @@ export function ParcelTable() {
   };
 
   const computeStatutoryActionDiff = (): Partial<any> => {
-    if (!originalStatutoryAction) return {};
+    if (!lastSubmittedStatutoryAction) return {};
     
     const diff: any = {};
     const fields = [
@@ -258,7 +261,7 @@ export function ParcelTable() {
     ];
     
     fields.forEach((field) => {
-      if (statutoryAction[field] !== originalStatutoryAction[field]) {
+      if (statutoryAction[field] !== lastSubmittedStatutoryAction[field]) {
         diff[field] = statutoryAction[field];
       }
     });
